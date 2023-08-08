@@ -42,7 +42,7 @@ int pidmap[20] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 
 int pc, ax, bx;
 
-tipoPcb pcbAtual = {.ax = 1, .bx = 3, .pc = 3, .pid = 8};
+tipoPcb pcbAtual = {.ax = 0, .bx = 0, .pc = 0, .pid = -1};
 
 int pidDoProximoProcessoASerCriado = 0;
 
@@ -66,6 +66,7 @@ void insereCreate(int tamanhoMem);
 void insereKill(int pidParaMatar);
 void insereProcessoUsuario();
 void criaProcessoSeForCreate();
+void mataProcessoSeForKill();
 
 tipoPcb *acessaIndiceFila(int i);
 tipoPcb dequeueFilaProntos();
@@ -82,9 +83,6 @@ int firstFit(int tamanhoMemoria);
 int main()
 {
     char comando[100];
-    char nomeAquivo[11] = "create.s\0";
-
-    pcbAtual.programa = carregaPrograma(nomeAquivo);
 
     while (true)
     {
@@ -116,6 +114,7 @@ void interpretaComando(char comando[])
         if (pc == pcbAtual.programa.n_linhas)
         {
             criaProcessoSeForCreate();
+            mataProcessoSeForKill();
             trocaContextoSemPreempcao();
         }
     }
@@ -182,6 +181,26 @@ void criaProcessoSeForCreate()
     {
         insereProcessoUsuario();
         reservaMemoria(ultimoDaFila->pcb.pid, pcbAtual.tamanhoMem);
+    }
+}
+
+void mataProcessoSeForKill()
+{
+    int i = 0;
+    tipoProcessoDaFila *processo = &placeholder;
+    tipoProcessoDaFila *processoAnterior;
+
+    if (pcbAtual.tipoDeProcesso == KILL)
+    {
+        while (processo->proximo != NULL) {
+            processoAnterior = processo;
+            processo = processo->proximo;
+            if (processo->pcb.pid == pcbAtual.pidParaMatar) {
+                processoAnterior->proximo = processo->proximo;
+                free(processo);
+            }
+        }
+        liberaMemoria(pcbAtual.pidParaMatar);
     }
 }
 
