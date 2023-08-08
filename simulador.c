@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <getopt.h>
 
 typedef struct ProgramaLido
 {
@@ -46,10 +47,15 @@ tipoPcb pcbAtual = {.ax = 0, .bx = 0, .pc = 0, .pid = -1};
 
 int pidDoProximoProcessoASerCriado = 0;
 
+bool preemptivo;
+int quantum;
+
 // O elemento para o qual o placeholder aponta é o primeiro da fila.
 // Quando o ultimoDaFila aponta para o placeholder, a fila está vazia.
 tipoProcessoDaFila placeholder = {.proximo = NULL};
 tipoProcessoDaFila *ultimoDaFila = &placeholder;
+
+void configuraSimulacao(int argc, char **argv);
 
 void mostraStatusSimulacao();
 void imprimeMapaDeBits(FILE *f_tty);
@@ -82,9 +88,11 @@ void liberaMemoria(int pid);
 int firstFit(int tamanhoMemoria);
 void executaCompactador();
 
-int main()
+int main(int argc,char **argv)
 {
     char comando[100];
+
+    configuraSimulacao(argc, argv);
 
     while (true)
     {
@@ -94,6 +102,16 @@ int main()
     }
 
     return 0;
+}
+
+void configuraSimulacao(int argc, char **argv) {
+    if (argc == 3) {
+        preemptivo = atoi(argv[1]);
+        quantum = atoi(argv[2]);
+    } else {
+        printf("É obrigadório inserir as duas opções de linha de comando.\n");
+        exit(-1);
+    }
 }
 
 void interpretaComando(char comando[])
