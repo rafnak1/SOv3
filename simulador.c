@@ -11,9 +11,43 @@ void imprimePcbAtual(FILE *f_tty);
 void imprimeStatusPrograma(FILE *f_tty);
 void imprimeSeparador(FILE *f_tty);
 
+void interpretaComando(char comando[]);
+
 int main()
 {
-    mostraStatusSimulacao();
+    char comando[100];
+
+    while (true)
+    {
+
+        mostraStatusSimulacao();
+        fgets(comando, 100, stdin);
+        interpretaComando(comando);
+    }
+
+    return 0;
+}
+
+void interpretaComando(char comando[])
+{
+    int tamanhoMemoria, pidParaMatar;
+
+    if (sscanf(comando, "create -m %d", &tamanhoMemoria) == 1)
+    {
+        printf("create -m %d\n", tamanhoMemoria);
+    }
+    else if (sscanf(comando, "kill %d", &pidParaMatar) == 1)
+    {
+        printf("kill %d\n", pidParaMatar);
+    }
+    else if (comando[0] == 'a')
+    {
+        printf("clock tick\n");
+    }
+    else
+    {
+        printf("Erro: Comando inválido!\n");
+    }
 }
 
 void mostraStatusSimulacao()
@@ -80,6 +114,7 @@ void imprimeStatusPrograma(FILE *f_tty)
     fprintf(f_tty, "+------------+\n");
 }
 
-void imprimeSeparador(FILE *f_tty) {
+void imprimeSeparador(FILE *f_tty)
+{
     fprintf(f_tty, "\n\n========================================================================================\n\n");
 }
