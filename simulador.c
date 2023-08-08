@@ -103,7 +103,7 @@ void interpretaComando(char comando[])
     {
         insereKill(pidParaMatar);
     }
-    else if (comando[0] == 't')
+    else if (comando[0] == '\n')
     {
         printf("clock tick\n");
         if (pcbAtual.programa.n_linhas != 0)
@@ -131,7 +131,6 @@ void trocaContextoSemPreempcao()
 void insereCreate(int tamanhoMem)
 {
     char nomeArquivo[20] = "create.s";
-
     tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
 
     tipoPcb pcb = {.tipoDeProcesso = CREATE, .tamanhoMem = tamanhoMem, .pid = novoPid(), .programa = carregaPrograma(nomeArquivo)};
@@ -204,14 +203,18 @@ tipoPcb dequeueFilaProntos()
 {
     tipoPcb pcb;
     if (placeholder.proximo == NULL)
+    {
         pcb.programa.n_linhas = 0; // Para saber que nenhum programa está executando
         pcb.pc = 0;
         pcb.ax = 0;
         pcb.bx = 0;
         pcb.pid = -1;
         return pcb;
+    }
     pcb = placeholder.proximo->pcb;
     placeholder.proximo = placeholder.proximo->proximo;
+    if (placeholder.proximo == NULL)
+        ultimoDaFila = &placeholder;
     return pcb;
 }
 
@@ -232,9 +235,9 @@ void mostraStatusSimulacao()
 
     FILE *f_tty = fopen("/dev/pts/7", "w");
 
+    imprimeFilaDeProntos(f_tty);
     imprimeStatusPrograma(f_tty);
     imprimeMapaDeBits(f_tty);
-    imprimeFilaDeProntos(f_tty);
     imprimeRegistradoresDaCpu(f_tty);
     imprimePcbAtual(f_tty);
     imprimeSeparador(f_tty);
