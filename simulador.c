@@ -47,6 +47,8 @@ tipoPcb pcbAtual = {.ax = 0, .bx = 0, .pc = 0, .pid = -1};
 
 int pidDoProximoProcessoASerCriado = 0;
 
+int roundRobinTimer = 0;
+
 bool preemptivo;
 int quantum;
 
@@ -79,6 +81,7 @@ tipoPcb *acessaIndiceFila(int i);
 tipoPcb dequeueFilaProntos();
 
 void trocaContextoSemPreempcao();
+void trocaContextoComPreempcao();
 
 void ler_instrucao(char *linha);
 tipoProgramaLido carregaPrograma(char *filename);
@@ -88,7 +91,7 @@ void liberaMemoria(int pid);
 int firstFit(int tamanhoMemoria);
 void executaCompactador();
 
-int main(int argc,char **argv)
+int main(int argc, char **argv)
 {
     char comando[100];
 
@@ -104,11 +107,15 @@ int main(int argc,char **argv)
     return 0;
 }
 
-void configuraSimulacao(int argc, char **argv) {
-    if (argc == 3) {
+void configuraSimulacao(int argc, char **argv)
+{
+    if (argc == 3)
+    {
         preemptivo = atoi(argv[1]);
         quantum = atoi(argv[2]);
-    } else {
+    }
+    else
+    {
         printf("É obrigadório inserir as duas opções de linha de comando.\n");
         exit(-1);
     }
@@ -129,8 +136,10 @@ void interpretaComando(char comando[])
     else if (comando[0] == '\n')
     {
         printf("clock tick\n");
-        if (pcbAtual.programa.n_linhas != 0)
+        if (pcbAtual.programa.n_linhas != 0) {
             pc++;
+            roundRobinTimer++;
+        }
         if (pc == pcbAtual.programa.n_linhas)
         {
             // Se nem o compactador consegue abrir espaço,
@@ -139,7 +148,10 @@ void interpretaComando(char comando[])
                 voltaProcessoAtualParaFinalDaFila();
             mataProcessoSeForKill();
             trocaContextoSemPreempcao();
-        }
+        } else if (roundRobinTimer == quantum && preemptivo) {
+            trocaContextoComPreempcao();
+        } 
+        
     }
     else
     {
@@ -155,6 +167,22 @@ void trocaContextoSemPreempcao()
     pc = pcbAtual.pc;
     ax = pcbAtual.ax;
     bx = pcbAtual.bx;
+
+    roundRobinTimer = 0;
+}
+
+// Processo foi interrompido.
+// Deverá voltar ao final da fila.
+void trocaContextoComPreempcao()
+{
+    voltaProcessoAtualParaFinalDaFila();
+
+    pcbAtual = dequeueFilaProntos();
+    pc = pcbAtual.pc;
+    ax = pcbAtual.ax;
+    bx = pcbAtual.bx;
+
+    roundRobinTimer = 0;
 }
 
 void insereCreate(int tamanhoMem)
@@ -225,6 +253,9 @@ void voltaProcessoAtualParaFinalDaFila()
 {
     tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
     novoProcesso->pcb = pcbAtual;
+    novoProcesso->pcb.pc = pc;
+    novoProcesso->pcb.ax = ax;
+    novoProcesso->pcb.bx = bx;
     ultimoDaFila->proximo = novoProcesso;
     ultimoDaFila = novoProcesso;
 }
