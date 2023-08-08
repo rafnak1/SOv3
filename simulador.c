@@ -56,9 +56,9 @@ void imprimeFilaDeProntos(FILE *f_tty)
 
 void imprimeRegistradoresDaCpu(FILE *f_tty)
 {
-    fprintf(f_tty, "+----------------------+-----------+-------+--------+\n");
+    fprintf(f_tty, "+----------------------+--------+-------+--------+\n");
     fprintf(f_tty, "| REGISTRADORES DA CPU | PC: %d  | AX: 8 | BX: 2  |\n", 5);
-    fprintf(f_tty, "+----------------------+-----------+-------+--------+\n");
+    fprintf(f_tty, "+----------------------+--------+-------+--------+\n");
 }
 
 void imprimePcbAtual(FILE *f_tty)
