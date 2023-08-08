@@ -170,8 +170,6 @@ void trocaContextoSemPreempcao()
     ax = pcbAtual.ax;
     bx = pcbAtual.bx;
 
-    printf("%d\n", pc);
-
     roundRobinTimer = 0;
 }
 
@@ -426,8 +424,18 @@ tipoPcb *acessaIndiceFila(int i)
 
 void mostraStatusSimulacao()
 {
+    FILE *f_tty, *arquivo;
+    char buffer[30], tty[30];
 
-    FILE *f_tty = fopen("/dev/pts/7", "w");
+    arquivo = fopen("pts.txt", "r");
+    // Lê a primeira linha
+    fgets(buffer, sizeof(buffer), arquivo);
+    buffer[strcspn(buffer, "\n")] = '\0';
+    strcpy(tty, buffer);
+
+    fclose(arquivo);
+
+    f_tty = fopen(tty, "w");
 
     imprimeFilaDeProntos(f_tty);
     imprimeStatusPrograma(f_tty);
