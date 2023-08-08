@@ -38,10 +38,13 @@ typedef struct processo
 } tipoProcessoDaFila;
 
 bool bitmap[20] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+int pidmap[20] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
 int pc, ax, bx;
 
 tipoPcb pcbAtual = {.ax = 1, .bx = 3, .pc = 3, .pid = 8};
+
+int pidDoProximoProcessoASerCriado = 0;
 
 // O elemento para o qual o placeholder aponta é o primeiro da fila.
 // Quando o ultimoDaFila aponta para o placeholder, a fila está vazia.
@@ -58,8 +61,9 @@ void imprimeSeparador(FILE *f_tty);
 
 void interpretaComando(char comando[]);
 
-void insereCreate();
-void insereKill();
+int novoPid();
+void insereCreate(int tamanhoMem);
+void insereKill(int pidParaMatar);
 void insereProcessoUsuario();
 tipoPcb *acessaIndiceFila(int i);
 
@@ -72,15 +76,9 @@ int main()
     char nomeAquivo[11] = "create.s\0";
 
     pcbAtual.programa = carregaPrograma(nomeAquivo);
-    pc = 2;
-
-    insereCreate();
-    insereKill();
-    insereProcessoUsuario();
 
     while (true)
     {
-
         mostraStatusSimulacao();
         fgets(comando, 100, stdin);
         interpretaComando(comando);
@@ -95,20 +93,68 @@ void interpretaComando(char comando[])
 
     if (sscanf(comando, "create -m %d", &tamanhoMemoria) == 1)
     {
-        printf("create -m %d\n", tamanhoMemoria);
+        insereCreate(tamanhoMemoria);
     }
     else if (sscanf(comando, "kill %d", &pidParaMatar) == 1)
     {
-        printf("kill %d\n", pidParaMatar);
+        insereKill(pidParaMatar);
     }
-    else if (comando[0] == 'a')
+    else if (comando[0] == 't')
     {
         printf("clock tick\n");
+        pc++;
     }
     else
     {
         printf("Erro: Comando inválido!\n");
     }
+}
+
+void insereCreate(int tamanhoMem)
+{
+    char nomeArquivo[20] = "create.s";
+
+    tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
+
+    tipoPcb pcb = {.tipoDeProcesso = CREATE, .tamanhoMem = tamanhoMem, .pid = novoPid(), .programa = carregaPrograma(nomeArquivo)};
+    novoProcesso->pcb = pcb;
+
+    novoProcesso->proximo = NULL;
+    ultimoDaFila->proximo = novoProcesso;
+    ultimoDaFila = novoProcesso;
+}
+
+void insereKill(int pidParaMatar)
+{
+    char nomeArquivo[20] = "kill.s";
+
+    tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
+
+    tipoPcb pcb = {.tipoDeProcesso = KILL, .pidParaMatar = pidParaMatar, .pid = novoPid(), .programa = carregaPrograma(nomeArquivo)};
+    novoProcesso->pcb = pcb;
+
+    novoProcesso->proximo = NULL;
+    ultimoDaFila->proximo = novoProcesso;
+    ultimoDaFila = novoProcesso;
+}
+
+void insereProcessoUsuario()
+{
+    char nomeArquivo[20] = "programa_usuario.s";
+
+    tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
+
+    tipoPcb pcb = {.tipoDeProcesso = PROCESSO_USUARIO, .pid = novoPid(), .programa = carregaPrograma(nomeArquivo)};
+    novoProcesso->pcb = pcb;
+
+    novoProcesso->proximo = NULL;
+    ultimoDaFila->proximo = novoProcesso;
+    ultimoDaFila = novoProcesso;
+}
+
+int novoPid()
+{
+    return pidDoProximoProcessoASerCriado++;
 }
 
 /* Carregador de Programas *.s */
@@ -146,42 +192,6 @@ tipoPcb *acessaIndiceFila(int i)
         p = p->proximo;
     }
     return &p->pcb;
-}
-
-void insereCreate()
-{
-    tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
-
-    tipoPcb pcb = {.tipoDeProcesso = CREATE, .tamanhoMem = 4};
-    novoProcesso->pcb = pcb;
-
-    novoProcesso->proximo = NULL;
-    ultimoDaFila->proximo = novoProcesso;
-    ultimoDaFila = novoProcesso;
-}
-
-void insereKill()
-{
-    tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
-
-    tipoPcb pcb = {.tipoDeProcesso = KILL, .pidParaMatar = 2};
-    novoProcesso->pcb = pcb;
-
-    novoProcesso->proximo = NULL;
-    ultimoDaFila->proximo = novoProcesso;
-    ultimoDaFila = novoProcesso;
-}
-
-void insereProcessoUsuario()
-{
-    tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
-
-    tipoPcb pcb = {.tipoDeProcesso = PROCESSO_USUARIO, .pid = 9};
-    novoProcesso->pcb = pcb;
-
-    novoProcesso->proximo = NULL;
-    ultimoDaFila->proximo = novoProcesso;
-    ultimoDaFila = novoProcesso;
 }
 
 void mostraStatusSimulacao()
