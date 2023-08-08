@@ -125,11 +125,13 @@ void interpretaComando(char comando[])
 {
     int tamanhoMemoria, pidParaMatar;
 
-    if (sscanf(comando, "create -m %d", &tamanhoMemoria) == 1)
+    if (sscanf(comando, "create -m %d", &tamanhoMemoria) == 1 ||
+        sscanf(comando, "c %d", &tamanhoMemoria) == 1)
     {
         insereCreate(tamanhoMemoria);
     }
-    else if (sscanf(comando, "kill %d", &pidParaMatar) == 1)
+    else if (sscanf(comando, "kill %d", &pidParaMatar) == 1 || 
+             sscanf(comando, "k %d", &pidParaMatar) == 1)
     {
         insereKill(pidParaMatar);
     }
