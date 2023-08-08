@@ -6,7 +6,7 @@
 
 typedef struct ProgramaLido
 {
-    char linhas[100][30];
+    char linhas[30][30];
     int n_linhas;
 } tipoProgramaLido;
 
@@ -65,7 +65,11 @@ int novoPid();
 void insereCreate(int tamanhoMem);
 void insereKill(int pidParaMatar);
 void insereProcessoUsuario();
+
 tipoPcb *acessaIndiceFila(int i);
+tipoPcb dequeueFilaProntos();
+
+void trocaContextoSemPreempcao();
 
 void ler_instrucao(char *linha);
 tipoProgramaLido carregaPrograma(char *filename);
@@ -102,12 +106,26 @@ void interpretaComando(char comando[])
     else if (comando[0] == 't')
     {
         printf("clock tick\n");
-        pc++;
+        if (pcbAtual.programa.n_linhas != 0)
+            pc++;
+        if (pc == pcbAtual.programa.n_linhas)
+        {
+            trocaContextoSemPreempcao();
+        }
     }
     else
     {
         printf("Erro: Comando inválido!\n");
     }
+}
+
+// PC atingiu o HLT: Programa vai retornar
+void trocaContextoSemPreempcao()
+{
+    pcbAtual = dequeueFilaProntos();
+    pc = pcbAtual.pc;
+    ax = pcbAtual.ax;
+    bx = pcbAtual.bx;
 }
 
 void insereCreate(int tamanhoMem)
@@ -180,6 +198,21 @@ tipoProgramaLido carregaPrograma(char *filename)
     }
     programa.n_linhas = n_linhas;
     return programa;
+}
+
+tipoPcb dequeueFilaProntos()
+{
+    tipoPcb pcb;
+    if (placeholder.proximo == NULL)
+        pcb.programa.n_linhas = 0; // Para saber que nenhum programa está executando
+        pcb.pc = 0;
+        pcb.ax = 0;
+        pcb.bx = 0;
+        pcb.pid = -1;
+        return pcb;
+    pcb = placeholder.proximo->pcb;
+    placeholder.proximo = placeholder.proximo->proximo;
+    return pcb;
 }
 
 tipoPcb *acessaIndiceFila(int i)
