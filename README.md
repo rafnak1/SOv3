@@ -35,3 +35,11 @@ O simulador tem 3 comandos principais:
 - `kill [inteiro]` insere um processo de sistema na fila de prontos, que, quando termina de ser executado, mata um processo da fila de prontos com o PID igual ao inteiro fornecido.
 
 - Newline (apenas pressionando Enter): esse comando "vazio" simula um novo sinal de clock do processador, fazendo com que o Program Counter avance a execução do programa.
+
+### Programas em (pseudo) assembly
+
+Os arquivos .s contidos neste repositório podem ser executados na simulação. As instruções são meramente ilustrativas, ou seja, não fazem nada (apenas a HLT, ou halt, é útil para o simulador saber onde o programa acaba). São eles:
+- `create.s`: o programa de sistema que cria processos de usuário.
+- `kill.s`: o programa de sistema que mata processos de usuário.
+- `programa_usuario.s`: esse programa é "executado" toda vez que um processo de usuário é escalonado.
+- `4instrucoes.s` e `11instrucoes.s`: o propósito desses arquivos é o usuário copiar o conteúdo de um deles para `programa_usuario.s`, a fim de poder executar programas de usuário maiores (11 instruções) ou menores (4 instruções). 
