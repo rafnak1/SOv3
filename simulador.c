@@ -1,6 +1,14 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+typedef struct ProgramaLido
+{
+    char linhas[100][30];
+    int n_linhas;
+} tipoProgramaLido;
 
 enum TipoDeProcesso
 {
@@ -17,6 +25,7 @@ typedef struct PCB
     int pid;
     int pc, ax, bx;
     enum TipoDeProcesso tipoDeProcesso;
+    tipoProgramaLido programa;
     int tamanhoMem;   // só é útil se o processo for create
     int pidParaMatar; // só é útil se o processo for kill
 } tipoPcb;
@@ -54,9 +63,16 @@ void insereKill();
 void insereProcessoUsuario();
 tipoPcb *acessaIndiceFila(int i);
 
+void ler_instrucao(char *linha);
+tipoProgramaLido carregaPrograma(char *filename);
+
 int main()
 {
     char comando[100];
+    char nomeAquivo[11] = "create.s\0";
+
+    pcbAtual.programa = carregaPrograma(nomeAquivo);
+    pc = 2;
 
     insereCreate();
     insereKill();
@@ -93,6 +109,31 @@ void interpretaComando(char comando[])
     {
         printf("Erro: Comando inválido!\n");
     }
+}
+
+/* Carregador de Programas *.s */
+tipoProgramaLido carregaPrograma(char *filename)
+{
+    tipoProgramaLido programa;
+    FILE *f = fopen(filename, "r");
+    char linha[100];
+    int n_linhas = 0;
+    while (fgets(linha, sizeof(linha), f))
+    {
+        for (int i = 0; linha[i]; i++)
+        {
+            if (linha[i] == '\n')
+            {
+                linha[i] = '\0';
+                break;
+            }
+            linha[i] = toupper(linha[i]);
+        }
+        strcpy(programa.linhas[n_linhas], linha);
+        n_linhas++;
+    }
+    programa.n_linhas = n_linhas;
+    return programa;
 }
 
 tipoPcb *acessaIndiceFila(int i)
@@ -146,7 +187,7 @@ void insereProcessoUsuario()
 void mostraStatusSimulacao()
 {
 
-    FILE *f_tty = fopen("/dev/pts/8", "w");
+    FILE *f_tty = fopen("/dev/pts/7", "w");
 
     imprimeStatusPrograma(f_tty);
     imprimeMapaDeBits(f_tty);
@@ -195,7 +236,7 @@ void imprimeFilaDeProntos(FILE *f_tty)
 void imprimeRegistradoresDaCpu(FILE *f_tty)
 {
     fprintf(f_tty, "+----------------------+--------+-------+--------+\n");
-    fprintf(f_tty, "| REGISTRADORES DA CPU | PC: %d  | AX: 8 | BX: 2  |\n", 5);
+    fprintf(f_tty, "| REGISTRADORES DA CPU | PC: %d  | AX: %d | BX: %d  |\n", pc, ax, bx);
     fprintf(f_tty, "+----------------------+--------+-------+--------+\n");
 }
 
@@ -206,15 +247,32 @@ void imprimePcbAtual(FILE *f_tty)
     fprintf(f_tty, "+-----------+--------+--------+--------+--------+\n");
 }
 
+void ler_instrucao(char *linha)
+{
+    if (strcmp(linha, "HLT\n") == 0)
+        printf("Programa em execução entrou em halt \n");
+}
+
 void imprimeStatusPrograma(FILE *f_tty)
 {
+    tipoProgramaLido programaExecutando = pcbAtual.programa;
+    int pcAtual = pcbAtual.pc;
+
     fprintf(f_tty, "+------------+\n");
-
-    fprintf(f_tty, "| MOV AX, 10   <--\n");
-    fprintf(f_tty, "| MOV BX, AX\n");
-    fprintf(f_tty, "| JMP 0\n");
-    fprintf(f_tty, "| HLT\n");
-
+    for (int i = 0; i < programaExecutando.n_linhas; i++)
+    {
+        fprintf(f_tty, "| ");
+        fprintf(f_tty, "%s", programaExecutando.linhas[i]);
+        if (pc == i)
+        {
+            fprintf(f_tty, "\t<-- \n");
+            if (i == programaExecutando.n_linhas - 1)
+                printf("Última instruçao \n");
+            ler_instrucao(programaExecutando.linhas[i]);
+        }
+        else
+            fprintf(f_tty, "\n");
+    }
     fprintf(f_tty, "+------------+\n");
 }
 
