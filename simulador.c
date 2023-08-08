@@ -64,9 +64,10 @@ void interpretaComando(char comando[]);
 int novoPid();
 void insereCreate(int tamanhoMem);
 void insereKill(int pidParaMatar);
-void insereProcessoUsuario();
-void criaProcessoSeForCreate();
+int insereProcessoUsuario(int pid);
+int criaProcessoSeForCreate();
 void mataProcessoSeForKill();
+void voltaProcessoAtualParaFinalDaFila();
 
 tipoPcb *acessaIndiceFila(int i);
 tipoPcb dequeueFilaProntos();
@@ -76,9 +77,10 @@ void trocaContextoSemPreempcao();
 void ler_instrucao(char *linha);
 tipoProgramaLido carregaPrograma(char *filename);
 
-void reservaMemoria(int pid, int tamanhoMemoria);
+int reservaMemoria(int pid, int tamanhoMemoria);
 void liberaMemoria(int pid);
 int firstFit(int tamanhoMemoria);
+void executaCompactador();
 
 int main()
 {
@@ -113,7 +115,10 @@ void interpretaComando(char comando[])
             pc++;
         if (pc == pcbAtual.programa.n_linhas)
         {
-            criaProcessoSeForCreate();
+            // Se nem o compactador consegue abrir espaço,
+            // o create vai para o final da fila
+            if (criaProcessoSeForCreate() == -1)
+                voltaProcessoAtualParaFinalDaFila();
             mataProcessoSeForKill();
             trocaContextoSemPreempcao();
         }
@@ -161,13 +166,13 @@ void insereKill(int pidParaMatar)
     ultimoDaFila = novoProcesso;
 }
 
-void insereProcessoUsuario()
+int insereProcessoUsuario(int pid)
 {
     char nomeArquivo[20] = "programa_usuario.s";
 
     tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
 
-    tipoPcb pcb = {.tipoDeProcesso = PROCESSO_USUARIO, .pid = novoPid(), .programa = carregaPrograma(nomeArquivo)};
+    tipoPcb pcb = {.tipoDeProcesso = PROCESSO_USUARIO, .pid = pid, .programa = carregaPrograma(nomeArquivo)};
     novoProcesso->pcb = pcb;
 
     novoProcesso->proximo = NULL;
@@ -175,13 +180,35 @@ void insereProcessoUsuario()
     ultimoDaFila = novoProcesso;
 }
 
-void criaProcessoSeForCreate()
+int criaProcessoSeForCreate()
 {
+    int resultado;
+    int pid = novoPid();
+
     if (pcbAtual.tipoDeProcesso == CREATE)
     {
-        insereProcessoUsuario();
-        reservaMemoria(ultimoDaFila->pcb.pid, pcbAtual.tamanhoMem);
+        resultado = reservaMemoria(pid, pcbAtual.tamanhoMem);
+        if (resultado == -1)
+        {
+            executaCompactador();
+            resultado = reservaMemoria(pid, pcbAtual.tamanhoMem);
+            // Não deu para reservar nem depois da compactação
+            if (resultado == -1)
+            {
+                return -1;
+            }
+        }
+        insereProcessoUsuario(pid);
     }
+    return 0;
+}
+
+void voltaProcessoAtualParaFinalDaFila()
+{
+    tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
+    novoProcesso->pcb = pcbAtual;
+    ultimoDaFila->proximo = novoProcesso;
+    ultimoDaFila = novoProcesso;
 }
 
 void mataProcessoSeForKill()
@@ -192,10 +219,12 @@ void mataProcessoSeForKill()
 
     if (pcbAtual.tipoDeProcesso == KILL)
     {
-        while (processo->proximo != NULL) {
+        while (processo->proximo != NULL)
+        {
             processoAnterior = processo;
             processo = processo->proximo;
-            if (processo->pcb.pid == pcbAtual.pidParaMatar) {
+            if (processo->pcb.pid == pcbAtual.pidParaMatar)
+            {
                 processoAnterior->proximo = processo->proximo;
                 free(processo);
             }
@@ -204,16 +233,52 @@ void mataProcessoSeForKill()
     }
 }
 
-void reservaMemoria(int pid, int tamanhoMemoria)
+int reservaMemoria(int pid, int tamanhoMemoria)
 {
     int indiceParaReservar = firstFit(tamanhoMemoria);
+    if (indiceParaReservar == -1)
+    {
+        return -1;
+    }
     for (int i = 0; i < tamanhoMemoria; i++)
     {
         bitmap[indiceParaReservar + i] = true;
         pidmap[indiceParaReservar + i] = pid;
     }
+    return 0;
 }
 
+void executaCompactador()
+{
+    int inicio, final, pid, tamanho, primeiroIndiceLivre;
+    for (int i = 0; i < 20; i++)
+    {
+        if (bitmap[i] == true)
+        {
+            pid = pidmap[i];
+            inicio = i;
+            final = i;
+            while (final < 20 && pidmap[final] == pid)
+                final++;
+            tamanho = final - inicio;
+
+            primeiroIndiceLivre = 0;
+            while (bitmap[primeiroIndiceLivre] == true)
+                primeiroIndiceLivre++;
+
+            liberaMemoria(pid);
+            for (int j = 0; j < tamanho; j++)
+            {
+                bitmap[primeiroIndiceLivre + j] = true;
+                pidmap[primeiroIndiceLivre + j] = pid;
+            }
+
+            i = primeiroIndiceLivre + tamanho;
+        }
+    }
+}
+
+// Retorna -1 se não há slots contíguos o suficiente de memória
 int firstFit(int tamanhoMemoria)
 {
     int contadorPosicoesContiguas = 0;
