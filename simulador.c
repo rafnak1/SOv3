@@ -65,6 +65,7 @@ int novoPid();
 void insereCreate(int tamanhoMem);
 void insereKill(int pidParaMatar);
 void insereProcessoUsuario();
+void criaProcessoSeForCreate();
 
 tipoPcb *acessaIndiceFila(int i);
 tipoPcb dequeueFilaProntos();
@@ -73,6 +74,9 @@ void trocaContextoSemPreempcao();
 
 void ler_instrucao(char *linha);
 tipoProgramaLido carregaPrograma(char *filename);
+
+void reservaMemoria(int pid, int tamanhoMemoria);
+void liberaMemoria(int pid);
 
 int main()
 {
@@ -110,6 +114,7 @@ void interpretaComando(char comando[])
             pc++;
         if (pc == pcbAtual.programa.n_linhas)
         {
+            criaProcessoSeForCreate();
             trocaContextoSemPreempcao();
         }
     }
@@ -122,6 +127,7 @@ void interpretaComando(char comando[])
 // PC atingiu o HLT: Programa vai retornar
 void trocaContextoSemPreempcao()
 {
+    liberaMemoria(pcbAtual.pid);
     pcbAtual = dequeueFilaProntos();
     pc = pcbAtual.pc;
     ax = pcbAtual.ax;
@@ -167,6 +173,34 @@ void insereProcessoUsuario()
     novoProcesso->proximo = NULL;
     ultimoDaFila->proximo = novoProcesso;
     ultimoDaFila = novoProcesso;
+}
+
+void criaProcessoSeForCreate()
+{
+    if (pcbAtual.tipoDeProcesso == CREATE)
+    {
+        insereProcessoUsuario();
+        reservaMemoria(ultimoDaFila->pcb.pid, pcbAtual.tamanhoMem);
+    }
+}
+
+void reservaMemoria(int pid, int tamanhoMemoria)
+{
+    for (int i = 0; i < tamanhoMemoria; i++)
+    {
+        bitmap[i] = true;
+        pidmap[i] = pid;
+    }
+}
+
+void liberaMemoria(int pid)
+{
+    for (int i = 0; i < 20; i++) {
+        if (pidmap[i] == pid) {
+            pidmap[i] = -1;
+            bitmap[i] = false;
+        }
+    }
 }
 
 int novoPid()
