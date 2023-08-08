@@ -77,6 +77,7 @@ tipoProgramaLido carregaPrograma(char *filename);
 
 void reservaMemoria(int pid, int tamanhoMemoria);
 void liberaMemoria(int pid);
+int firstFit(int tamanhoMemoria);
 
 int main()
 {
@@ -186,17 +187,39 @@ void criaProcessoSeForCreate()
 
 void reservaMemoria(int pid, int tamanhoMemoria)
 {
+    int indiceParaReservar = firstFit(tamanhoMemoria);
     for (int i = 0; i < tamanhoMemoria; i++)
     {
-        bitmap[i] = true;
-        pidmap[i] = pid;
+        bitmap[indiceParaReservar + i] = true;
+        pidmap[indiceParaReservar + i] = pid;
     }
+}
+
+int firstFit(int tamanhoMemoria)
+{
+    int contadorPosicoesContiguas = 0;
+    for (int i = 0; i < 20; i++)
+    {
+        if (bitmap[i] == false)
+        {
+            contadorPosicoesContiguas++;
+        }
+        else
+        {
+            contadorPosicoesContiguas = 0;
+        }
+        if (contadorPosicoesContiguas == tamanhoMemoria)
+            return i - tamanhoMemoria + 1;
+    }
+    return -1;
 }
 
 void liberaMemoria(int pid)
 {
-    for (int i = 0; i < 20; i++) {
-        if (pidmap[i] == pid) {
+    for (int i = 0; i < 20; i++)
+    {
+        if (pidmap[i] == pid)
+        {
             pidmap[i] = -1;
             bitmap[i] = false;
         }
