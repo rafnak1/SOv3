@@ -136,22 +136,24 @@ void interpretaComando(char comando[])
     else if (comando[0] == '\n')
     {
         printf("clock tick\n");
-        if (pcbAtual.programa.n_linhas != 0) {
+        if (pcbAtual.programa.n_linhas != 0)
+        {
             pc++;
             roundRobinTimer++;
         }
         if (pc == pcbAtual.programa.n_linhas)
         {
             // Se nem o compactador consegue abrir espaço,
-            // o create vai para o final da fila
+            // cria-se um novo create no final da fila.
             if (criaProcessoSeForCreate() == -1)
-                voltaProcessoAtualParaFinalDaFila();
+                insereCreate(pcbAtual.tamanhoMem);
             mataProcessoSeForKill();
             trocaContextoSemPreempcao();
-        } else if (roundRobinTimer == quantum && preemptivo) {
+        }
+        else if (roundRobinTimer == quantum && preemptivo)
+        {
             trocaContextoComPreempcao();
-        } 
-        
+        }
     }
     else
     {
@@ -167,6 +169,8 @@ void trocaContextoSemPreempcao()
     pc = pcbAtual.pc;
     ax = pcbAtual.ax;
     bx = pcbAtual.bx;
+
+    printf("%d\n", pc);
 
     roundRobinTimer = 0;
 }
@@ -218,7 +222,7 @@ int insereProcessoUsuario(int pid)
 
     tipoProcessoDaFila *novoProcesso = (tipoProcessoDaFila *)malloc(sizeof(tipoProcessoDaFila));
 
-    tipoPcb pcb = {.tipoDeProcesso = PROCESSO_USUARIO, .pid = pid, .programa = carregaPrograma(nomeArquivo)};
+    tipoPcb pcb = {.pc = 0, .ax = 0, .bx = 0, .tipoDeProcesso = PROCESSO_USUARIO, .pid = pid, .programa = carregaPrograma(nomeArquivo)};
     novoProcesso->pcb = pcb;
 
     novoProcesso->proximo = NULL;

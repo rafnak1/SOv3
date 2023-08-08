@@ -1,3 +1,3 @@
 all:
 	gcc -o simulador *.c
-	./simulador 1 3
+	./simulador 0 3
