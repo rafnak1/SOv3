@@ -1,0 +1,54 @@
+Este relatório contém todas as decisões de projeto e notas consideradas relevantes pelo grupo.
+
+Primeiramente, sobre a seção das “observações e dicas importantes” do enunciado:
+
+(i) Sobre fragmentação externa e o processo de compactação de memória:
+
+O sistema operacional simulado não toma nenhuma providência quanto à fragmentação externa até que algum processo CREATE seja incapaz de alocar memória devido à falta de algum espaço contíguo livre. Quando isso ocorre, temos o seguinte comportamento:
+
+1- O CREATE chama o processo de compactação de memória;
+2- O CREATE tenta alocar memória novamente;
+3- Se ele falhar, isso significa que mesmo a memória compactada não tem espaço o suficiente. Portanto, o CREATE termina e um novo CREATE é inserido no final da fila de prontos.
+
+(ii) Como será o controle do quantum (sleep, getchar)? Como ocorre a comunicação entre os dois prompts?
+
+Existe apenas um programa executando. Esse programa é monothread, e o clock do processador é controlado por “fgets()” (o comando para incrementar o PC é a string vazia, ou seja, ou Enter). Como o quantum é contabilizado com base no clock do processador, ele também é feito por meio de “fgets()”. 
+Quanto à comunicação dos dois prompts, é utilizado o pts, um sistema de arquivos virtual do kernel do Linux que controla a saída de emuladores de Terminais do Sistema Operacional, o usuário então deve executar o comando “tty” no prompt em que deseja visualizar o status da simulação.  Em seguida, ele deve copiar a saída desse comando para o arquivo “pts.txt”. O programa lê esse arquivo e, por meio da interface de programação do Linux, consegue imprimir caracteres nesse terminal.
+
+Outras decisões e clarificações:
+
+- O simulador foi feito para funcionar em Linux
+- Memória de processos do SO: Não fazem parte dos 20 slots. Assim, não é necessário se preocupar com espaço de memória para criar um CREATE ou um KILL.
+- Política de execução do compactador de memória:
+    - Executar quando não há espaço para abrir um processo
+    - Executar periodicamente
+- O compactador entra na fila de prontos?
+    - Não, ele irá executar assim que um CREATE falhe ao tentar alocar memória. O racional por trás dessa decisão é que, se o compactador entrasse na fila, quanto mais tempo ele gastar na fila, maior seria o número de processos que não seriam abertos por não haver espaço contíguo.
+- O quê fazer quando não há espaço para criar um novo processo?
+    - Como descrito anteriormente, o CREATE chama o compactador. Se ainda não há espaço depois disso, o CREATE retorna sem conseguir criar um processo, e um novo CREATE é inserido no final da fila, a fim de tentar novamente depois da fila rodar.
+- Parâmetros do simulador (via opções de linha de comando):
+    - Definição de escalonamento: FIFO (0) ou round-robin (1)
+    - Tempo de quantum (número inteiro)
+- Comandos do simulador
+    - Criar um CREATE que irá reservar 5 slots de memória: “create -m 5”
+    - Criar um KILL para matar o processo com PID 2: “kill 2”
+    - Gerar um tick do clock: “” (string vazia, basta pressionar Enter) 
+    - Terminar o simulador: “quit”
+- Arquivos assembly
+    - No geral não são importantes, no entanto, o simulador realmente detecta a presença da instrução Halt (HLT). Portanto, a função dos arquivos é determinar quantas instruções cada programa tem.
+- Informações exibidas no prompt de visualização:
+    - Status da execução do programa
+    - PCB do processo sendo executado
+    - Estado atual dos registradores da CPU
+    - Mapa de bits
+    - Fila de prontos   
+- Sobre Fragmentação e Mapa de Bits
+    - O mapa de bits utiliza o algoritmo de First Fit, como descrito no enunciado.
+    - O compactador desloca todos os espaços ocupados contíguos de memória em direção ao índice zero do mapa de bits (para a esquerda).
+- PIDs: create usa um PID sempre novo proveniente de um contador global.
+- Reserva de memória e PIDs: a própria memória mantém o controle de qual processo tem quais porções da memória, como se fosse um controlador de memória
+- Informações no PCB:
+    - PID
+    - PC
+    - AX e BX (são meramente ilustrativos)
+- Quando nenhum processo está executando, o PID atual fica em -1 (pois existe PID 0)
