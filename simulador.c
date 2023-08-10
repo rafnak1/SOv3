@@ -139,6 +139,10 @@ void interpretaComando(char comando[])
     {
         insereKill(pidParaMatar);
     }
+    else if (comando[0] == 'q')
+    {
+        exit(0);
+    }
     else if (comando[0] == '\n')
     {
         printf("clock tick\n");

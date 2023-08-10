@@ -33,7 +33,7 @@ Outras decisões e clarificações:
     - Criar um CREATE que irá reservar 5 slots de memória: “create -m 5”
     - Criar um KILL para matar o processo com PID 2: “kill 2”
     - Gerar um tick do clock: “” (string vazia, basta pressionar Enter) 
-    - Terminar o simulador: “quit”
+    - Terminar o simulador: “q”
 - Arquivos assembly
     - No geral não são importantes, no entanto, o simulador realmente detecta a presença da instrução Halt (HLT). Portanto, a função dos arquivos é determinar quantas instruções cada programa tem.
     - O "create.s" é sempre carregado para representar um CREATE. Os arquivos "kill.s" e "programa_usuario.s" são análogos.
