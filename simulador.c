@@ -286,6 +286,8 @@ void mataProcessoSeForKill()
             processo = processo->proximo;
             if (processo->pcb.pid == pcbAtual.pidParaMatar)
             {
+                if (ultimoDaFila == processo)
+                    ultimoDaFila = processoAnterior;
                 processoAnterior->proximo = processo->proximo;
                 free(processo);
             }
