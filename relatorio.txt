@@ -36,6 +36,8 @@ Outras decisões e clarificações:
     - Terminar o simulador: “quit”
 - Arquivos assembly
     - No geral não são importantes, no entanto, o simulador realmente detecta a presença da instrução Halt (HLT). Portanto, a função dos arquivos é determinar quantas instruções cada programa tem.
+    - O "create.s" é sempre carregado para representar um CREATE. Os arquivos "kill.s" e "programa_usuario.s" são análogos.
+    - Os arquivos do formato "Ninstrucoes.s" são para customizar o número de instruções de um processo. O usuário deve copiar o programa e colar no "programa_usuario.s" para mudar o tamanho do próximo programa de usuário a ser criado. 
 - Informações exibidas no prompt de visualização:
     - Status da execução do programa
     - PCB do processo sendo executado
