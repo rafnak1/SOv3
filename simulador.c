@@ -114,9 +114,13 @@ void configuraSimulacao(int argc, char **argv)
         preemptivo = atoi(argv[1]);
         quantum = atoi(argv[2]);
     }
+    else if (argc == 2 && atoi(argv[1]) == 0)
+    {
+        preemptivo = 0;
+    }
     else
     {
-        printf("É obrigadório inserir as duas opções de linha de comando.\n");
+        printf("É obrigatório inserir argumentos de linha de comando. Para mais informações, favor ler o README.md\n");
         exit(-1);
     }
 }
@@ -130,7 +134,7 @@ void interpretaComando(char comando[])
     {
         insereCreate(tamanhoMemoria);
     }
-    else if (sscanf(comando, "kill %d", &pidParaMatar) == 1 || 
+    else if (sscanf(comando, "kill %d", &pidParaMatar) == 1 ||
              sscanf(comando, "k %d", &pidParaMatar) == 1)
     {
         insereKill(pidParaMatar);
