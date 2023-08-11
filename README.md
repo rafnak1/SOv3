@@ -27,6 +27,12 @@ O simulador tem duas opções de linha de comando, sendo que ambas são números
 
 Irá executar o simulador no modo round-robin com quantum igual a 4 ciclos de clock de processador.
 
+Não é necessário especificara segunda opção caso a primeira seja 0. Exemplo:
+
+```./simulador 0```
+
+Irá executar o simulador no modo FIFO.
+
 ### Comandos do simulador
 
 O simulador tem 3 comandos principais:
