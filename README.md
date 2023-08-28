@@ -4,10 +4,10 @@ Trabalho da disciplina PCS3746 - Sistemas Operacionais, do 3º módulo Acadêmic
 
 ## Membros do Grupo:
 
-- Augusto Vaccarelli Costa  10770197
-- Igor Souza Lima e Silva Caixeta 11918564
-- Luiz Fernando de Almeida Mota 11807790
-- Rafael Katsuo Nakata 11803819
+- [@AugustoVaccarelli](https://github.com/AugustoVaccarelli) - Augusto Vaccarelli Costa  10770197
+- [@Flute-Gamer](https://github.com/Flute-Gamer) - Igor Souza Lima e Silva Caixeta 11918564
+- [@luimot](https://github.com/luimot) - Luiz Fernando de Almeida Mota 11807790
+- [@rafnak1](https://github.com/rafnak1) - Rafael Katsuo Nakata 11803819
 
 ## Como usar
 
